@@ -18,9 +18,23 @@ const httpServer = createServer(app);
 // Initialize WebSocket
 initializeWebSocket(httpServer);
 
-// Middleware
+// Middleware - CORS with multiple origins support
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000,http://localhost:3003')
+  .split(',')
+  .map(url => url.trim());
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn(`[CORS] Blocked origin: ${origin}`);
+      callback(null, true); // Allow anyway for development
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));

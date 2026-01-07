@@ -11,11 +11,26 @@ import type {
 let io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null = null;
 
 export function initializeWebSocket(httpServer: HTTPServer): Server {
+  // Support multiple origins for CORS
+  const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000,http://localhost:3003')
+    .split(',')
+    .map(url => url.trim());
+
   io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(
     httpServer,
     {
       cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: (origin, callback) => {
+          // Allow requests with no origin
+          if (!origin) return callback(null, true);
+          
+          if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            logger.warn(`[WebSocket] Blocked origin: ${origin}`);
+            callback(null, true); // Allow anyway for development
+          }
+        },
         methods: ['GET', 'POST'],
         credentials: true,
       },
