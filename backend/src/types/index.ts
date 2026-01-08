@@ -1,3 +1,5 @@
+export type ToolName = 'openCode' | 'claude' | 'gemini' | 'googleDrive' | 'ralphLoop';
+
 export interface ChatRequest {
   message: string;
   sessionId: string;
@@ -8,6 +10,9 @@ export interface ChatResponse {
   response: string;
   model_used?: string;
   sessionId?: string;
+  tool_used?: ToolName;
+  execution_time_ms?: number;
+  workflowId?: string;
   error?: string;
 }
 
